@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bibliothèque Sheikh Sâlih Al-Fawzan - Expérience Interactive</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Sans+Arabic:wght@300;400;700&display=swap');
+        
+        :root {
+            --saudi-gold: #c5a059;
+            --saudi-dark-green: #006C35;
+            --ghoutra-red: #8B0000;
+            --sand-light: #fdfaf5;
+            --transition-smooth: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Noto Sans Arabic', sans-serif;
+            background-color: #f4eee0;
+            /* Fond rappelant l'architecture saoudienne */
+            background-image: linear-gradient(rgba(244, 238, 224, 0.85), rgba(244, 238, 224, 0.85)), 
+                              url('https://images.unsplash.com/photo-1551041777-ed0763923460?auto=format&fit=crop&q=80&w=1920');
+            background-attachment: fixed;
+            background-size: cover;
+            background-position: center;
+            scroll-behavior: smooth;
+        }
+
+        .arabic-text {
+            font-family: 'Amiri', serif;
+            direction: rtl;
+        }
+
+        /* Barre de progression de lecture */
+        #scrollProgress {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 4px;
+            background: linear-gradient(to right, var(--saudi-gold), #fff);
+            z-index: 1000;
+            transition: width 0.1s ease-out;
+        }
+
+        /* Motif Ghoutrah */
+        .ghoutra-pattern {
+            background-image:  linear-gradient(45deg, #eee 25%, transparent 25%, transparent 75%, #eee 75%, #eee), 
+                               linear-gradient(45deg, #eee 25%, transparent 25%, transparent 75%, #eee 75%, #eee);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+            opacity: 0.05;
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+        }
+
+        .border-saudi {
+            border-image: linear-gradient(to right, var(--saudi-gold), #e6c98a, var(--saudi-gold)) 1;
+            border-bottom: 3px solid;
+        }
+
+        .book-card {
+            border: 1px solid #e2d1b3;
+            transition: var(--transition-smooth);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+
+        .book-card:hover {
+            transform: translateY(-15px) scale(1.02);
+            box-shadow: 0 30px 50px -15px rgba(197, 160, 89, 0.3);
+            border-color: var(--saudi-gold);
+            z-index: 10;
+        }
+
+        .btn-saudi {
+            background: linear-gradient(135deg, var(--saudi-dark-green), #004d26);
+            color: white;
+            box-shadow: 0 4px 0 #00331a;
+            transition: var(--transition-smooth);
+        }
+
+        .btn-saudi:hover {
+            filter: brightness(1.1);
+            transform: translateY(-2px);
+        }
+
+        .btn-saudi:active {
+            transform: translateY(2px);
+            box-shadow: 0 0px 0 #00331a;
+        }
+
+        .hero-section {
+            background: linear-gradient(rgba(0, 108, 53, 0.92), rgba(0, 108, 53, 0.92)), 
+                        url('https://images.unsplash.com/photo-1590076214667-c0f33b98c442?auto=format&fit=crop&q=80&w=1000');
+            background-size: cover;
+            background-position: center;
+            clip-path: polygon(0 0, 100% 0, 100% 90%, 0% 100%);
+        }
+
+        .sheikh-photo-frame {
+            border: 4px solid var(--saudi-gold);
+            padding: 5px;
+            background: white;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            transition: var(--transition-smooth);
+        }
+
+        /* Animation pour le bouton radio */
+        @keyframes pulse-gold {
+            0% { box-shadow: 0 0 0 0 rgba(197, 160, 89, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(197, 160, 89, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(197, 160, 89, 0); }
+        }
+        .radio-pulse {
+            animation: pulse-gold 3s infinite;
+        }
+
+        /* Notification Toast */
+        #toast {
+            visibility: hidden;
+            min-width: 250px;
+            background-color: var(--saudi-dark-green);
+            color: #fff;
+            text-align: center;
+            border-radius: 12px;
+            padding: 16px;
+            position: fixed;
+            z-index: 1000;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 2px solid var(--saudi-gold);
+        }
+
+        #toast.show {
+            visibility: visible;
+            animation: fadein 0.5s, fadeout 0.5s 2.5s;
+        }
+
+        @keyframes fadein {
+            from {bottom: 0; opacity: 0;}
+            to {bottom: 30px; opacity: 1;}
+        }
+
+        @keyframes fadeout {
+            from {bottom: 30px; opacity: 1;}
+            to {bottom: 0; opacity: 0;}
+        }
+
+        .reveal { opacity: 0; }
+    </style>
+</head>
+<body class="text-gray-900">
+
+    <div id="scrollProgress"></div>
+    <div id="toast">Lancement du téléchargement... <i class="fas fa-check-circle ml-2"></i></div>
+
+    <!-- Bouton flottant Radio -->
+    <a href="https://almeldawy.github.io/holy-quran-radio-pwa//radio_du_Coran_Arabie_Saoudite.html" 
+       target="_blank"
+       class="fixed bottom-6 right-6 z-[100] bg-white border-2 border-saudi-gold p-3 rounded-full shadow-2xl flex items-center gap-3 group hover:bg-emerald-50 transition-all radio-pulse">
+        <span class="max-w-0 overflow-hidden group-hover:max-w-xs transition-all duration-500 ease-in-out whitespace-nowrap text-emerald-900 font-bold px-0 group-hover:px-4">Écouter la Radio du Coran</span>
+        <div class="w-12 h-12 bg-emerald-700 rounded-full flex items-center justify-center text-saudi-gold shadow-inner">
+            <i class="fas fa-broadcast-tower text-xl"></i>
+        </div>
+    </a>
+
+    <!-- Barre supérieure -->
+    <div class="h-2 w-full bg-[#8B0000] sticky top-0 z-[60]"></div>
+
+    <!-- Navigation -->
+    <nav class="bg-white/95 backdrop-blur-md border-b-2 border-saudi sticky top-2 z-50 py-3 transition-all duration-300 shadow-sm" id="mainNav">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <div class="flex items-center gap-3 group cursor-pointer">
+                <div class="w-12 h-12 bg-emerald-700 rounded-full flex items-center justify-center text-white shadow-lg group-hover:rotate-[360deg] transition-transform duration-700">
+                    <i class="fas fa-mosque"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-emerald-900 leading-none">Bibliothèque Al-Fawzan</h1>
+                    <span class="text-[10px] text-saudi-gold font-bold uppercase tracking-widest">مكتبة الشيخ صالح الفوزان</span>
+                </div>
+            </div>
+            <div class="hidden md:flex items-center gap-8 font-semibold text-emerald-800">
+                <a href="#" class="hover:text-saudi-gold transition flex items-center gap-2"><i class="fas fa-home"></i> Accueil</a>
+                <a href="#" class="hover:text-saudi-gold transition flex items-center gap-2"><i class="fas fa-feather"></i> Les Savants</a>
+                <a href="#" class="hover:text-saudi-gold transition flex items-center gap-2"><i class="fas fa-envelope"></i> Contact</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="hero-section relative text-white py-20 md:py-32 px-4 overflow-hidden shadow-2xl">
+        <div class="ghoutra-pattern"></div>
+        <div class="container mx-auto relative z-10">
+            <div class="flex flex-col md:flex-row items-center gap-12">
+                
+                <div class="flex-shrink-0 reveal" id="heroImage">
+                    <div class="sheikh-photo-frame rounded-full w-56 h-56 md:w-72 md:h-72 overflow-hidden ring-8 ring-white/10">
+                        <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh4rTIC6h13Tzp_gMyoCtOV8oN5kVAwaqbJtCUv4yoROJgRE3UgXY8yIqnbiBuleIvYarJLrZJtamo6DfGcFqIlvW_i2YNfDLhdRguhma5WvXm3dHMV3Fo6GxXm2vD6X1Uhi6uqqKTYnPNAZjn8S09ohDEVYmit-i-wFeIqATUNnTeeXCJsjOioDNnUjIk/s16000/GHo2R_qW0AAPM-j.jpeg" 
+                             alt="Sheikh Sâlih Al-Fawzan" 
+                             class="w-full h-full object-cover">
+                    </div>
+                    <div class="mt-6 text-center">
+                        <span class="bg-saudi-gold/20 text-saudi-gold px-4 py-1 rounded-full font-bold italic text-sm backdrop-blur-sm border border-saudi-gold/30">حفظه الله تعالى</span>
+                    </div>
+                </div>
+
+                <div class="text-center md:text-left flex-grow reveal" id="heroText">
+                    <div class="inline-flex items-center gap-2 px-4 py-1 border border-saudi-gold text-saudi-gold rounded mb-8 text-sm font-bold uppercase tracking-tighter">
+                        <i class="fas fa-certificate"></i> Membre du Comité des Grands Savants
+                    </div>
+                    <h2 class="text-5xl md:text-7xl font-bold mb-8 arabic-text leading-tight drop-shadow-lg">مكتبة معالي الشيخ صالح الفوزان</h2>
+                    <p class="text-xl text-emerald-50 mb-12 max-w-2xl font-light leading-relaxed">
+                        Bienvenue sur la plateforme dédiée à l'héritage littéraire de son excellence le Sheikh. Explorez des décennies de science légiférée à travers ses écrits.
+                    </p>
+                    
+                    <div class="relative max-w-2xl group">
+                        <input type="text" id="searchInput" onkeyup="searchBooks()" 
+                            placeholder="Rechercher un ouvrage (Tawhid, Fiqh...)" 
+                            class="w-full p-6 rounded-2xl text-gray-900 shadow-2xl focus:outline-none border-4 border-transparent focus:border-saudi-gold transition-all pr-16 text-lg">
+                        <div class="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-saudi-gold rounded-xl flex items-center justify-center text-white shadow-lg group-focus-within:rotate-90 transition-transform">
+                            <i class="fas fa-search"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Filtres -->
+    <section class="container mx-auto -mt-12 relative z-20 px-4 reveal" id="filterSection">
+        <div class="bg-white/90 backdrop-blur-xl p-3 rounded-2xl shadow-2xl flex flex-wrap justify-center gap-3 border border-saudi-gold/20">
+            <button onclick="filterBooks('Tous')" class="cat-btn bg-emerald-800 text-white px-8 py-3 rounded-xl font-bold shadow-lg transition-all hover:scale-105">Tous les livres</button>
+            <button onclick="filterBooks('Aqida')" class="cat-btn bg-white text-emerald-900 px-8 py-3 rounded-xl font-bold hover:bg-emerald-50 transition-all border border-emerald-100">العقيدة</button>
+            <button onclick="filterBooks('Fiqh')" class="cat-btn bg-white text-emerald-900 px-8 py-3 rounded-xl font-bold hover:bg-emerald-50 transition-all border border-emerald-100">الفقه</button>
+            <button onclick="filterBooks('Hadith')" class="cat-btn bg-white text-emerald-900 px-8 py-3 rounded-xl font-bold hover:bg-emerald-50 transition-all border border-emerald-100">الحديث</button>
+            <button onclick="filterBooks('Manhaj')" class="cat-btn bg-white text-emerald-900 px-8 py-3 rounded-xl font-bold hover:bg-emerald-50 transition-all border border-emerald-100">المنهج</button>
+        </div>
+    </section>
+
+    <!-- Grid de livres -->
+    <main class="container mx-auto py-24 px-4">
+        <div id="booksGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
+            <!-- Injecté dynamiquement -->
+        </div>
+        
+        <div id="noResult" class="hidden text-center py-32 reveal">
+            <div class="relative inline-block">
+                <i class="fas fa-book text-saudi-gold text-8xl opacity-10"></i>
+                <i class="fas fa-search absolute inset-0 flex items-center justify-center text-saudi-gold text-4xl"></i>
+            </div>
+            <p class="text-3xl font-bold text-emerald-900 mt-6">Aucun trésor trouvé</p>
+            <p class="text-gray-500 mt-2 italic">Désolé, ce livre n'est pas encore disponible dans notre inventaire.</p>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-emerald-950 text-white pt-32 pb-12 px-4 relative overflow-hidden">
+        <div class="ghoutra-pattern"></div>
+        <div class="container mx-auto text-center relative z-10">
+            <div class="max-w-4xl mx-auto mb-16">
+                <i class="fas fa-quran text-saudi-gold text-5xl mb-8"></i>
+                <h3 class="text-3xl md:text-5xl font-bold arabic-text mb-6 leading-relaxed">قُلْ هَلْ يَسْتَوِي الَّذِينَ يَعْلَمُونَ وَالَّذِينَ لَا يَعْلَمُونَ</h3>
+                <p class="text-emerald-200 text-lg italic">"Dis : Sont-ils égaux ceux qui savent et ceux qui ne savent pas ?" (Az-Zumar, 9)</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-12 mb-20 text-left">
+                <div class="border-l-2 border-saudi-gold/30 pl-6">
+                    <h4 class="text-saudi-gold font-bold mb-4 uppercase tracking-widest">Navigation</h4>
+                    <ul class="space-y-2 text-emerald-200">
+                        <li><a href="#" class="hover:text-white transition">Haut de page</a></li>
+                        <li><a href="#" class="hover:text-white transition">La Radio du Coran</a></li>
+                        <li><a href="#" class="hover:text-white transition">Biographie du Sheikh</a></li>
+                    </ul>
+                </div>
+                <div class="border-l-2 border-saudi-gold/30 pl-6">
+                    <h4 class="text-saudi-gold font-bold mb-4 uppercase tracking-widest">Liens Utiles</h4>
+                    <ul class="space-y-2 text-emerald-200">
+                        <li><a href="#" class="hover:text-white transition">Site Officiel du Sheikh</a></li>
+                        <li><a href="#" class="hover:text-white transition">Comité de l'Ifta</a></li>
+                    </ul>
+                </div>
+                <div class="border-l-2 border-saudi-gold/30 pl-6">
+                    <h4 class="text-saudi-gold font-bold mb-4 uppercase tracking-widest">Suivez-nous</h4>
+                    <div class="flex gap-4 text-2xl">
+                        <a href="#" class="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center hover:bg-saudi-gold hover:text-emerald-950 transition-all"><i class="fab fa-telegram"></i></a>
+                        <a href="#" class="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center hover:bg-saudi-gold hover:text-emerald-950 transition-all"><i class="fab fa-twitter"></i></a>
+                        <a href="#" class="w-12 h-12 bg-white/5 rounded-full flex items-center justify-center hover:bg-saudi-gold hover:text-emerald-950 transition-all"><i class="fas fa-share-alt"></i></a>
+                    </div>
+                </div>
+            </div>
+
+            <p class="text-emerald-500 text-sm">© 2025 - Bibliothèque dédiée à la Science Légiférée. Puisse Allah en faire une aumône continue.</p>
+        </div>
+    </footer>
+
+    <script>
+        const books = [
+            { 
+                title: "Kitab At-Tawhid", 
+                arabicTitle: "كتاب التوحيد", 
+                category: "Aqida", 
+                description: "L'ouvrage de référence sur l'unicité pure, enseigné par le Sheikh depuis des années.", 
+                pdfLink: "javascript:void(0)",
+                cover: "https://images.unsplash.com/photo-1544640808-32ca72ac7f37?auto=format&fit=crop&q=80&w=400" 
+            },
+            { 
+                title: "Al-Mulakhkhas Al-Fiqhi", 
+                arabicTitle: "الملخص الفقهي", 
+                category: "Fiqh", 
+                description: "Un résumé clair et concis de la jurisprudence islamique selon l'école Hanbalite.", 
+                pdfLink: "javascript:void(0)",
+                cover: "" 
+            },
+            { 
+                title: "Usul Al-Thalatha", 
+                arabicTitle: "شرح الأصول الثلاثة", 
+                category: "Aqida", 
+                description: "Les trois fondements que chaque musulman doit connaître sur son Seigneur, sa religion et son Prophète.", 
+                pdfLink: "javascript:void(0)",
+                cover: ""
+            },
+            { 
+                title: "Bulugh Al-Maram", 
+                arabicTitle: "إتحاف أهل الإسلام", 
+                category: "Hadith", 
+                description: "L'explication monumentale des hadiths de lois par le Sheikh Al-Fawzan.", 
+                pdfLink: "javascript:void(0)",
+                cover: ""
+            }
+        ];
+
+        // GSAP Animations d'entrée
+        window.onload = () => {
+            gsap.registerPlugin(ScrollTrigger);
+
+            gsap.to("#heroImage", { opacity: 1, x: 0, duration: 1, ease: "power4.out" });
+            gsap.to("#heroText", { opacity: 1, y: 0, duration: 1, delay: 0.3, ease: "power4.out" });
+            gsap.to("#filterSection", { opacity: 1, scale: 1, duration: 0.8, delay: 0.6 });
+
+            displayBooks(books);
+        };
+
+        // Barre de progression
+        window.onscroll = () => {
+            let winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            let height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            let scrolled = (winScroll / height) * 100;
+            document.getElementById("scrollProgress").style.width = scrolled + "%";
+
+            // Effet nav au scroll
+            const nav = document.getElementById("mainNav");
+            if (winScroll > 50) {
+                nav.classList.add('shadow-xl', 'py-1', 'bg-white');
+            } else {
+                nav.classList.remove('shadow-xl', 'py-3');
+            }
+        };
+
+        function displayBooks(data) {
+            const grid = document.getElementById('booksGrid');
+            const noResult = document.getElementById('noResult');
+            grid.innerHTML = '';
+            
+            if(data.length === 0) {
+                noResult.classList.remove('hidden');
+                gsap.fromTo("#noResult", {opacity: 0, y: 20}, {opacity: 1, y: 0});
+                return;
+            } else {
+                noResult.classList.add('hidden');
+            }
+
+            data.forEach((book, index) => {
+                const coverContent = book.cover 
+                    ? `<img src="${book.cover}" alt="${book.title}" class="book-cover-img p-6 rounded-3xl">`
+                    : `<div class="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center text-saudi-gold shadow-inner"><i class="fas fa-book-open text-4xl"></i></div>`;
+
+                const card = `
+                    <div class="book-card rounded-3xl overflow-hidden flex flex-col relative opacity-0 translate-y-10 shadow-lg" id="book-${index}">
+                        <div class="absolute top-4 right-4 z-10">
+                            <span class="bg-emerald-900/90 backdrop-blur-md text-saudi-gold text-[10px] font-bold px-3 py-1 rounded-full border border-saudi-gold/30">
+                                ${book.category}
+                            </span>
+                        </div>
+                        <div class="bg-gradient-to-br from-emerald-50/80 to-white/80 flex justify-center items-center h-72 relative overflow-hidden group">
+                            <div class="ghoutra-pattern" style="opacity: 0.1"></div>
+                            ${coverContent}
+                            <div class="absolute inset-0 bg-emerald-900/0 group-hover:bg-emerald-900/40 transition-all duration-500 flex items-center justify-center">
+                                <i class="fas fa-eye text-white text-3xl opacity-0 group-hover:opacity-100 transform scale-50 group-hover:scale-100 transition-all"></i>
+                            </div>
+                        </div>
+                        <div class="p-8 flex-grow flex flex-col bg-white/95">
+                            <h4 class="text-3xl font-bold text-emerald-950 mb-2 arabic-text">${book.arabicTitle}</h4>
+                            <h3 class="text-lg font-extrabold text-gray-800 mb-4">${book.title}</h3>
+                            <p class="text-gray-500 text-sm mb-8 flex-grow leading-relaxed">${book.description}</p>
+                            <button onclick="downloadAction()" 
+                                class="btn-saudi w-full inline-flex items-center justify-center gap-3 py-5 rounded-2xl font-bold text-sm tracking-widest uppercase">
+                                <i class="fas fa-cloud-download-alt text-lg"></i>
+                                Accéder au PDF
+                            </button>
+                        </div>
+                    </div>
+                `;
+                grid.innerHTML += card;
+                
+                // Animer l'apparition
+                gsap.to(`#book-${index}`, {
+                    opacity: 1,
+                    y: 0,
+                    duration: 0.6,
+                    delay: index * 0.1,
+                    scrollTrigger: {
+                        trigger: `#book-${index}`,
+                        start: "top 95%"
+                    }
+                });
+            });
+        }
+
+        function downloadAction() {
+            const toast = document.getElementById("toast");
+            toast.className = "show";
+            setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
+        }
+
+        function searchBooks() {
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = books.filter(b => 
+                b.title.toLowerCase().includes(term) || 
+                b.arabicTitle.toLowerCase().includes(term) ||
+                b.description.toLowerCase().includes(term)
+            );
+            displayBooks(filtered);
+        }
+
+        function filterBooks(category) {
+            const buttons = document.querySelectorAll('.cat-btn');
+            buttons.forEach(btn => {
+                if(btn.innerText.includes(category) || (category === 'Tous' && btn.innerText.includes('Tous'))) {
+                    btn.classList.add('bg-emerald-800', 'text-white', 'shadow-xl');
+                    btn.classList.remove('bg-white', 'text-emerald-900');
+                } else {
+                    btn.classList.remove('bg-emerald-800', 'text-white', 'shadow-xl');
+                    btn.classList.add('bg-white', 'text-emerald-900');
+                }
+            });
+
+            if(category === 'Tous') {
+                displayBooks(books);
+            } else {
+                const filtered = books.filter(b => b.category === category);
+                displayBooks(filtered);
+            }
+        }
+    </script>
+</body>
+</html>
